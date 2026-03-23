@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>120-Day Renewal Cadence Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0A0A0A;
+      --surface: #141414;
+      --surface2: #1E1E1E;
+      --border: #2A2A2A;
+      --orange: #FF5C00;
+      --orange-dim: #CC4900;
+      --orange-glow: rgba(255, 92, 0, 0.15);
+      --text: #F0F0F0;
+      --text-muted: #888;
+      --complete: #22C55E;
+      --pending: #444;
+      --mono: 'Space Mono', monospace;
+      --body: Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--body);
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .logo-mark {
+      width: 40px; height: 40px;
+      background: var(--orange);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 18px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    header h1 {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── Account List ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .account-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .account-item:last-child { border-bottom: none; }
+    .account-item:hover { background: var(--surface2); }
+    .account-item.active {
+      background: var(--orange-glow);
+      border-left: 3px solid var(--orange);
+    }
+    .account-item.active { padding-left: 17px; }
+
+    .account-name {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .account-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .account-arr {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--orange);
+    }
+    .days-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+    .days-badge.urgent   { background: rgba(239,68,68,0.15); color: #EF4444; }
+    .days-badge.warning  { background: rgba(234,179,8,0.15);  color: #EAB308; }
+    .days-badge.healthy  { background: rgba(34,197,94,0.15);  color: var(--complete); }
+
+    /* ── Main Panel ── */
+    .main-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Summary Card ── */
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .summary-card h2 {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .summary-card .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .summary-stat {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .summary-stat .label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .summary-stat .value {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .summary-stat .value.highlight { color: var(--orange); }
+
+    /* ── Timeline ── */
+    .timeline-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .timeline-card h3 {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    /* Progress bar */
+    .progress-track {
+      position: relative;
+      margin-bottom: 32px;
+    }
+    .progress-rail {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange-dim), var(--orange));
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* Stage nodes along rail */
+    .stage-nodes {
+      display: flex;
+      justify-content: space-between;
+      position: absolute;
+      top: -10px;
+      left: 0; right: 0;
+    }
+    .node {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      cursor: default;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .node.complete { border-color: var(--complete); background: var(--complete); color: #000; }
+    .node.active   { border-color: var(--orange); background: var(--orange); color: #fff; box-shadow: 0 0 0 4px var(--orange-glow); }
+    .node.pending  { border-color: var(--pending); color: var(--text-muted); }
+
+    /* Stage cards */
+    .stages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .stage {
+      display: grid;
+      grid-template-columns: 160px 1fr auto;
+      align-items: start;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      transition: border-color 0.2s;
+    }
+    .stage.active   { border-color: var(--orange); background: var(--orange-glow); }
+    .stage.complete { border-color: #1A3A2A; background: rgba(34,197,94,0.04); }
+
+    .stage-meta { display: flex; flex-direction: column; gap: 4px; }
+    .stage-day {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .stage-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .stage-body { display: flex; flex-direction: column; gap: 4px; }
+    .stage-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .stage-tasks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .task-chip {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--text-muted);
+      font-family: var(--mono);
+    }
+    .stage.active   .task-chip { background: rgba(255,92,0,0.2); color: var(--orange); }
+    .stage.complete .task-chip { background: rgba(34,197,94,0.1); color: var(--complete); }
+
+    .stage-status {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      align-self: start;
+    }
+    .stage-status.complete { background: rgba(34,197,94,0.1); color: var(--complete); }
+    .stage-status.active   { background: rgba(255,92,0,0.15); color: var(--orange); }
+    .stage-status.pending  { background: var(--border); color: var(--text-muted); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      text-align: center;
+      gap: 12px;
+    }
+    .empty-icon {
+      width: 56px; height: 56px;
+      border-radius: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    .empty-state h3 { font-family: var(--mono); font-size: 15px; }
+    .empty-state p  { font-size: 13px; color: var(--text-muted); max-width: 260px; line-height: 1.6; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .stage { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">CR</div>
+  <div>
+    <h1>Renewal Cadence Tracker</h1>
+    <p>120-Day Pipeline &mdash; Q2 2026</p>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Account List ── -->
+  <div class="panel">
+    <div class="panel-header">Accounts</div>
+    <div id="account-list"></div>
+  </div>
+
+  <!-- ── Main Content ── -->
+  <div class="main-panel" id="main-panel">
+    <div class="panel" style="flex:1;">
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>Select an account</h3>
+        <p>Choose an account from the list to view its 120-day renewal cadence and stage progress.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const accounts = [
+    {
+      id: 1,
+      name: "Chegg",
+      arr: 240000,
+      daysToRenewal: 34,
+      ae: "Sarah Kim",
+      champion: "Marcus T. (VP Eng)",
+      industry: "EdTech",
+      activeStage: 4
+    },
+    {
+      id: 2,
+      name: "Mercury",
+      arr: 185000,
+      daysToRenewal: 67,
+      ae: "James Ortega",
+      champion: "Priya S. (CTO)",
+      industry: "Fintech",
+      activeStage: 3
+    },
+    {
+      id: 3,
+      name: "Groupon",
+      arr: 310000,
+      daysToRenewal: 91,
+      ae: "Dana Reyes",
+      champion: "Tom L. (Dir. Eng)",
+      industry: "E-Commerce",
+      activeStage: 2
+    },
+    {
+      id: 4,
+      name: "Life360",
+      arr: 128000,
+      daysToRenewal: 118,
+      ae: "Chris Wahl",
+      champion: "Anya M. (Eng Lead)",
+      industry: "SaaS / Mobile",
+      activeStage: 1
+    }
+  ];
+
+  const stages = [
+    {
+      day: "Day 120–90",
+      name: "Discovery & Baseline",
+      desc: "Establish health score, confirm champion, map stakeholders, review usage metrics.",
+      tasks: ["Health score audit", "Stakeholder map", "QBR scheduling", "Usage review"]
+    },
+    {
+      day: "Day 90–60",
+      name: "Value Articulation",
+      desc: "Run QBR, quantify ROI, surface expansion opportunities, identify detractors.",
+      tasks: ["QBR delivery", "ROI summary", "Expansion scope", "Risk log"]
+    },
+    {
+      day: "Day 60–30",
+      name: "Commercial Alignment",
+      desc: "Send renewal quote, align on pricing, negotiate terms, loop in AE.",
+      tasks: ["Proposal sent", "Legal review", "Pricing alignment", "AE sync"]
+    },
+    {
+      day: "Day 30–14",
+      name: "Negotiation & Close",
+      desc: "Final commercial terms, executive sponsor engaged, redlines resolved.",
+      tasks: ["Exec sponsor call", "Final redlines", "MSA update", "Close plan"]
+    },
+    {
+      day: "Day 14–0",
+      name: "Signed & Transitioned",
+      desc: "Order form executed, CS handoff complete, success plan updated for next year.",
+      tasks: ["Contract signed", "CS handoff", "Success plan", "Kickoff sched."]
+    }
+  ];
+
+  function getDaysBadgeClass(days) {
+    if (days <= 45) return "urgent";
+    if (days <= 75) return "warning";
+    return "healthy";
+  }
+
+  function formatARR(val) {
+    return "$" + (val >= 1000 ? (val / 1000).toFixed(0) + "K" : val);
+  }
+
+  function getStageStatus(stageIndex, activeStage) {
+    if (stageIndex < activeStage - 1) return "complete";
+    if (stageIndex === activeStage - 1) return "active";
+    return "pending";
+  }
+
+  function progressPercent(activeStage) {
+    return Math.round(((activeStage - 0.5) / stages.length) * 100);
+  }
+
+  function renderAccounts() {
+    const list = document.getElementById("account-list");
+    list.innerHTML = accounts.map(a => `
+      <div class="account-item" id="acct-${a.id}" onclick="selectAccount(${a.id})">
+        <div class="account-name">${a.name}</div>
+        <div class="account-meta">
+          <span class="account-arr">${formatARR(a.arr)}</span>
+          <span class="days-badge ${getDaysBadgeClass(a.daysToRenewal)}">${a.daysToRenewal}d</span>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function selectAccount(id) {
+    const account = accounts.find(a => a.id === id);
+    if (!account) return;
+
+    // Highlight selected row
+    document.querySelectorAll(".account-item").forEach(el => el.classList.remove("active"));
+    document.getElementById("acct-" + id).classList.add("active");
+
+    const pct = progressPercent(account.activeStage);
+
+    const stagesHTML = stages.map((s, i) => {
+      const status = getStageStatus(i, account.activeStage);
+      const nodeClass = status;
+      return `
+        <div class="stage ${status}">
+          <div class="stage-meta">
+            <span class="stage-day">${s.day}</span>
+            <span class="stage-name">Stage ${i + 1}: ${s.name}</span>
+          </div>
+          <div class="stage-body">
+            <span class="stage-desc">${s.desc}</span>
+            <div class="stage-tasks">
+              ${s.tasks.map(t => `<span class="task-chip">${t}</span>`).join("")}
+            </div>
+          </div>
+          <span class="stage-status ${status}">${status}</span>
+        </div>
+      `;
+    }).join("");
+
+    const nodesHTML = stages.map((_, i) => {
+      const status = getStageStatus(i, account.activeStage);
+      const label = status === "complete" ? "✓" : (i + 1);
+      return `<div class="node ${status}">${label}</div>`;
+    }).join("");
+
+    document.getElementById("main-panel").innerHTML = `
+      <div class="summary-card">
+        <h2>${account.name}</h2>
+        <p class="subtitle">${account.industry}</p>
+        <div class="summary-grid">
+          <div class="summary-stat">
+            <div class="label">ARR</div>
+            <div class="value highlight">${formatARR(account.arr)}</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Days to Expiry</div>
+            <div class="value">${account.daysToRenewal} days</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">AE Owner</div>
+            <div class="value" style="font-size:13px">${account.ae}</div>
+          </div>
+          <div class="summary-stat">
+            <div class="label">Champion</div>
+            <div class="value" style="font-size:12px">${account.champion}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-card">
+        <h3>120-Day Renewal Timeline</h3>
+
+        <div class="progress-track">
+          <div class="progress-rail">
+            <div class="progress-fill" style="width: ${pct}%"></div>
+          </div>
+          <div class="stage-nodes">${nodesHTML}</div>
+        </div>
+
+        <div class="stages">${stagesHTML}</div>
+      </div>
+    `;
+  }
+
+  renderAccounts();
+</script>
+</body>
+</html>
